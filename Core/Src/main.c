@@ -182,7 +182,8 @@ int main(void)
 			  sdram_test = (uint64_t *)sdram_test_start;
 		  }
 	  }
-
+	  HAL_I2C_Master_Transmit(hi2c, DevAddress, pData, Size, Timeout);
+	  HAL_I2C_Master_Receive(hi2c, DevAddress, pData, Size, Timeout)
 
     /* USER CODE END WHILE */
 
