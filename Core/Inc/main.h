@@ -63,6 +63,7 @@ void Error_Handler(void);
 #define TOUCH_RESET_GPIO_Port GPIOC
 #define TOUCH_IRQ_Pin GPIO_PIN_14
 #define TOUCH_IRQ_GPIO_Port GPIOC
+#define TOUCH_IRQ_EXTI_IRQn EXTI15_10_IRQn
 #define DISP_EN_Pin GPIO_PIN_15
 #define DISP_EN_GPIO_Port GPIOC
 #define DISP_PWM_Pin GPIO_PIN_4

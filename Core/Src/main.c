@@ -29,6 +29,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "tft.h"
+#include "gt911.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -49,11 +50,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+volatile struct GT911 gt911;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -85,7 +87,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -102,13 +103,25 @@ int main(void)
   MX_RNG_Init();
   MX_FMC_Init();
   MX_I2C1_Init();
+
+  /* Initialize interrupts */
+  MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
+  struct GT911_Config gt911conf = {
+		  .resetPort = TOUCH_RESET_GPIO_Port,
+		  .resetPin = TOUCH_RESET_Pin,
+		  .interruptPort = TOUCH_IRQ_GPIO_Port,
+		  .interruptPin = TOUCH_IRQ_Pin,
+		  .i2c = &hi2c1,
+  };
+  gt911 = GT911_Init(gt911conf);
+
 
   // Soft Boot-up
-	HAL_GPIO_WritePin(DISP_RESET_GPIO_Port, DISP_RESET_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(TOUCH_RESET_GPIO_Port, TOUCH_RESET_Pin, GPIO_PIN_RESET);
   	HAL_GPIO_WritePin(DISP_EN_GPIO_Port, DISP_EN_Pin, GPIO_PIN_RESET);
   	HAL_Delay(10);
-  	HAL_GPIO_WritePin(DISP_RESET_GPIO_Port, DISP_RESET_Pin, GPIO_PIN_SET);
+  	HAL_GPIO_WritePin(TOUCH_RESET_GPIO_Port, TOUCH_RESET_Pin, GPIO_PIN_SET);
   	HAL_GPIO_WritePin(DISP_EN_GPIO_Port, DISP_EN_Pin, GPIO_PIN_SET);
   	HAL_Delay(10);
 
@@ -119,71 +132,27 @@ int main(void)
 	}
 	TIM3->CCR1 = 700;
 
-//	const uint32_t d_t = 1;
-
 	struct tTftFramebuffer framebuffer = TFT_init_framebuffer(&hltdc);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
-#define CHECK_SIZE 8192
-
 //  char check_buf[CHECK_SIZE+1] = {0};
-  char utoa_buf[64] = {0};
-  volatile uint64_t sdram_buf_1[CHECK_SIZE] = {0};
-  volatile uint64_t sdram_buf_2[CHECK_SIZE] = {0};
 
-  volatile uint32_t sdram_test_start = 0xC0000000;
-  volatile uint32_t sdram_test_size = 15*1024*1024;
-  volatile uint64_t *sdram_test = (uint64_t *)sdram_test_start;
   TFT_fill(framebuffer, 0xFF7F7F7F);
 
   while (1)
   {
-	  uint64_t bytes_read = 0;
-	  uint64_t false_reads = 0;
-
-	  while(bytes_read < 2000000000){
-		  for(uint32_t i =0; i<CHECK_SIZE; i++){
-			  HAL_RNG_GenerateRandomNumber(&hrng, (uint32_t *)(sdram_buf_1+i));
-		  }
-
-		  for(uint32_t i=0; i<CHECK_SIZE; i++){
-			  sdram_test[i] = sdram_buf_1[i];
-		  }
-
-		  for(uint32_t i=0; i<CHECK_SIZE; i++){
-			  sdram_buf_2[i] = sdram_test[i];
-		  }
-
-		  for(uint32_t i=0; i<CHECK_SIZE; i++){
-			  bytes_read++;
-			  if(sdram_buf_1[i] == sdram_buf_2[i]){
-			  }else{
-				  false_reads++;
-			  }
-		  }
-
-
-		  uint64_t false_rate = (false_reads*100)/bytes_read;
-		  char false_rate_str[256] = {0};
-
-		  sprintf(false_rate_str, "False rate: %lu : %lu of %lu", (uint32_t)false_rate, (uint32_t)false_reads, (uint32_t)bytes_read);
-
-		  utoa((uint32_t)sdram_test, utoa_buf, 16);
-		  TFT_String(framebuffer, 0, 0, utoa_buf, 0xFFFFFFFF, 0xFF000000);
-
-		  TFT_String(framebuffer, 0, 420, false_rate_str, 0xFF000000, 0xFFFFFFFF);
-
-		  sdram_test+=CHECK_SIZE;
-		  if ((uint32_t)(sdram_test_start+sdram_test_size) < (uint32_t)sdram_test){
-			  sdram_test = (uint64_t *)sdram_test_start;
+	  if(GT911_Scan(&gt911, 100)!=HAL_OK){
+		  TFT_String(framebuffer, 20, 20, "Error reading display coordinates", 0xFFFF0000, 0xFF000000);
+	  }else{
+		  if(gt911.TouchCount > 0){
+			  TFT_String(framebuffer, 20,40, "Touch detected", 0xFF00FF00, 0xFF000000);
+		  }else{
+			  TFT_fill(framebuffer, 0x0);
 		  }
 	  }
-	  HAL_I2C_Master_Transmit(hi2c, DevAddress, pData, Size, Timeout);
-	  HAL_I2C_Master_Receive(hi2c, DevAddress, pData, Size, Timeout)
 
     /* USER CODE END WHILE */
 
@@ -276,7 +245,23 @@ void SystemClock_Config(void)
   }
 }
 
+/**
+  * @brief NVIC Configuration.
+  * @retval None
+  */
+static void MX_NVIC_Init(void)
+{
+  /* EXTI15_10_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
+
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin==TOUCH_IRQ_Pin){
+		gt911.Touch = 1;
+	}
+}
 /* USER CODE END 4 */
 
 /**
