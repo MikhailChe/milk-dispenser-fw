@@ -15,8 +15,10 @@
 #define GT911_MAX_WIDTH		1024    	//Touchscreen pad max width
 #define GT911_MAX_HEIGHT		600			//Touchscreen pad max height
 
-#define GT911_CMD_WR_ADDR		0XBA					//Write data command
-#define GT911_CMD_RD_ADDR   	0XBB					//Read data command
+#define GT911_CMD_WR_ADDR		0XBA 					//Write data command
+#define GT911_CMD_RD_ADDR   	0XBB 				//Read data command
+//#define GT911_CMD_WR_ADDR		(0X14 << 1)					//Write data command
+//#define GT911_CMD_RD_ADDR   	GT911_CMD_WR_ADDR+1 				//Read data command
 
 //The maximum number of points supported by the capacitive touch screen
 #define GT911_MAX_TOUCH    5
@@ -40,19 +42,14 @@ struct GT911_Config{
 
 	GPIO_TypeDef* interruptPort;
 	uint16_t interruptPin;
-
-	I2C_HandleTypeDef* i2c;
 };
 
 
 #pragma pack(1)
 typedef __PACKED_STRUCT  {
-	uint8_t point_x_low;
-	uint8_t point_x_high;
-	uint8_t point_y_low;
-	uint8_t point_y_high;
-	uint8_t point_size_low;
-	uint8_t point_size_high;
+	uint16_t point_x;
+	uint16_t point_y;
+	uint16_t point_size;
 	uint16_t __reserved__;
 } GT911_TouchInfo;
 #pragma pack()
@@ -72,5 +69,8 @@ struct GT911
 struct GT911 GT911_Init(struct GT911_Config);
 uint8_t GT911_Scan(volatile struct GT911* gt911, uint32_t timeout);
 
+HAL_StatusTypeDef GT911_Read_ID(volatile struct GT911* gt911, uint8_t* buf, size_t len);
+
+HAL_StatusTypeDef GT911_RD_Reg(uint16_t reg, uint8_t *buf, uint8_t len);
 
 #endif /* GT911_GT911_H_ */
