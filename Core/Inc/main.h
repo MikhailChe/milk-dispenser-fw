@@ -72,7 +72,8 @@ void Error_Handler(void);
 #define TOUCH_SDA_Pin GPIO_PIN_7
 #define TOUCH_SDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+struct tTftFramebuffer;
+void print_i2c_error(struct tTftFramebuffer framebuffer);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

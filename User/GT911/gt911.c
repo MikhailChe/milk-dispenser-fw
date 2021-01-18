@@ -93,7 +93,7 @@ HAL_StatusTypeDef GT911_Scan(volatile struct GT911* gt911, uint32_t timeout){
 		if (ready_reg & GT911_READY_REG_BUFFER_STATUS){
 			break;
 		}
-		HAL_Delay(1);
+		HAL_Delay(10);
 	}
 
 	const uint8_t touch_points = ready_reg & GT911_READY_REG_NUMBER_OF_TOUCH_POINTS;
