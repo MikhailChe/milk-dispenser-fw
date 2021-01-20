@@ -4,6 +4,10 @@
 #include "i2c.h"
 #define PRIMITIVE_TIMEOUT 1000
 
+volatile struct GT911 gt911;
+volatile struct GT911 shadow;
+
+
 static void GT911_Reset()
 {
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -21,9 +25,9 @@ static void GT911_Reset()
 	// Hold INT pin low to select 0xBA/0xBB address
 	// TODO: implement selecting any address needed
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-	HAL_Delay(300);
+	HAL_Delay(100);
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-	HAL_Delay(300);
+	HAL_Delay(100);
 
 	GPIO_InitStruct.Pin = GPIO_PIN_14;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -31,8 +35,14 @@ static void GT911_Reset()
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 	HAL_Delay(100);
-//	HAL_NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
-//	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	HAL_NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_14;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
 }
 
 
@@ -54,7 +64,7 @@ HAL_StatusTypeDef GT911_RD_Reg(uint16_t reg, uint8_t *buf, uint8_t len){
 	return HAL_I2C_Master_Receive(&hi2c1, GT911_CMD_WR_ADDR, buf, len, PRIMITIVE_TIMEOUT);
 }
 
-HAL_StatusTypeDef GT911_Read_ID(volatile struct GT911* gt911, uint8_t* buf, size_t len){
+HAL_StatusTypeDef GT911_Read_ID(uint8_t* buf, size_t len){
 	if(GT911_RD_Reg(GT911_PRODUCT_ID_REG, buf, len)!=HAL_OK){
 		return HAL_ERROR;
 	}
@@ -76,8 +86,7 @@ static HAL_StatusTypeDef GT911_Ready_Reg_Clear(){
 	return GT911_WR_Reg(GT911_READY_REG, &buf, 1);
 }
 
-
-HAL_StatusTypeDef GT911_Scan(volatile struct GT911* gt911, uint32_t timeout){
+static HAL_StatusTypeDef GT911_Scan_Impl(uint32_t timeout){
 	HAL_StatusTypeDef status;
 	uint32_t time_start = HAL_GetTick();
 
@@ -93,7 +102,7 @@ HAL_StatusTypeDef GT911_Scan(volatile struct GT911* gt911, uint32_t timeout){
 		if (ready_reg & GT911_READY_REG_BUFFER_STATUS){
 			break;
 		}
-		HAL_Delay(10);
+		HAL_Delay(5);
 	}
 
 	const uint8_t touch_points = ready_reg & GT911_READY_REG_NUMBER_OF_TOUCH_POINTS;
@@ -101,8 +110,8 @@ HAL_StatusTypeDef GT911_Scan(volatile struct GT911* gt911, uint32_t timeout){
 		return HAL_ERROR;
 	}
 
-	gt911->TouchpointFlag = ready_reg;
-	gt911->TouchCount = touch_points;
+	shadow.TouchpointFlag = ready_reg;
+	shadow.TouchCount = touch_points;
 
 	if(touch_points == 0){
 		status = GT911_Ready_Reg_Clear();
@@ -126,21 +135,31 @@ HAL_StatusTypeDef GT911_Scan(volatile struct GT911* gt911, uint32_t timeout){
 	GT911_TouchInfo* touches = (GT911_TouchInfo*)coordinates_buffer;
 
 	for(size_t i=0; i<touch_points; i++){
-		gt911->Touches[i] = touches[i];
+		shadow.Touches[i] = touches[i];
 	}
 
 	return HAL_OK;
 
 }
 
-struct GT911 GT911_Init(struct GT911_Config config)
+HAL_StatusTypeDef GT911_Scan(uint32_t timeout){
+	shadow.Touch = 1;
+	HAL_StatusTypeDef status = GT911_Scan_Impl(timeout);
+	shadow.status = status;
+	return status;
+}
+
+
+void GT911_CopyShadow(){
+	gt911 = shadow;
+	shadow.Touch = 0;
+}
+
+
+HAL_StatusTypeDef GT911_Init()
 {
-	struct GT911  gt911 = {
-		.config = config
-	};
-	gt911.config = config;
 	printf("GT911_Init\r\n");
 	GT911_Reset();
-	return gt911;
+	return HAL_OK;
 }
 

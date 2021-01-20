@@ -35,16 +35,6 @@
 
 #define GT911_COORDINATES_REG_START 0x8150
 
-
-struct GT911_Config{
-	GPIO_TypeDef* resetPort;
-	uint16_t resetPin;
-
-	GPIO_TypeDef* interruptPort;
-	uint16_t interruptPin;
-};
-
-
 #pragma pack(1)
 typedef __PACKED_STRUCT  {
 	uint16_t point_x;
@@ -55,21 +45,30 @@ typedef __PACKED_STRUCT  {
 #pragma pack()
 
 
+struct GT911_Init{
+
+};
+
 struct GT911
 {
-	struct GT911_Config config;
+	GT911_TouchInfo Touches[GT911_MAX_TOUCH];
 
 	volatile uint8_t Touch;
+	HAL_StatusTypeDef status;
 
 	uint8_t TouchpointFlag;
 	uint8_t TouchCount;
 
-	GT911_TouchInfo Touches[GT911_MAX_TOUCH];
 };
-struct GT911 GT911_Init(struct GT911_Config);
-uint8_t GT911_Scan(volatile struct GT911* gt911, uint32_t timeout);
 
-HAL_StatusTypeDef GT911_Read_ID(volatile struct GT911* gt911, uint8_t* buf, size_t len);
+extern volatile struct GT911 gt911;
+
+HAL_StatusTypeDef GT911_Init();
+HAL_StatusTypeDef GT911_Scan(uint32_t timeout);
+
+void GT911_CopyShadow();
+
+HAL_StatusTypeDef GT911_Read_ID(uint8_t* buf, size_t len);
 
 HAL_StatusTypeDef GT911_RD_Reg(uint16_t reg, uint8_t *buf, uint8_t len);
 

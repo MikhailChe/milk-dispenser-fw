@@ -50,7 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile struct GT911 gt911;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -104,29 +104,31 @@ int main(void)
   MX_FMC_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
-  struct GT911_Config gt911conf = {
-		  .resetPort = TOUCH_RESET_GPIO_Port,
-		  .resetPin = TOUCH_RESET_Pin,
-		  .interruptPort = TOUCH_IRQ_GPIO_Port,
-		  .interruptPin = TOUCH_IRQ_Pin,
-  };
-  gt911 = GT911_Init(gt911conf);
-
-  // Soft Boot-up
-	HAL_GPIO_WritePin(DISP_EN_GPIO_Port, DISP_EN_Pin, GPIO_PIN_RESET);
-  	HAL_Delay(10);
-  	HAL_GPIO_WritePin(DISP_EN_GPIO_Port, DISP_EN_Pin, GPIO_PIN_SET);
-  	HAL_Delay(10);
-
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-	for(uint32_t i=1023; i>0; i--){
-		TIM3->CCR1 = i;
-		HAL_Delay(1);
-	}
-	TIM3->CCR1 = 0;
+  HAL_StatusTypeDef status;
 
 	struct tTftFramebuffer framebuffer = TFT_init_framebuffer(&hltdc);
+
+	// Soft Boot-up
+	HAL_GPIO_WritePin(DISP_EN_GPIO_Port, DISP_EN_Pin, GPIO_PIN_RESET);
+	HAL_Delay(100);
+	HAL_GPIO_WritePin(DISP_EN_GPIO_Port, DISP_EN_Pin, GPIO_PIN_SET);
+	HAL_Delay(100);
+
+	TFT_fill(framebuffer, 0xFFFFFFFF);
+
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+	for (uint32_t i = 1023; i > 0; i--) {
+		TIM3->CCR1 = i;
+		HAL_Delay(2);
+	}
+	TIM3->CCR1 = 0;
+	if(GT911_Init()!=HAL_OK){
+		while(1){
+			TFT_String(framebuffer, 0, 0, "Touch init error", 0xFFFF0000, 0x0);
+		}
+	}
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -134,11 +136,9 @@ int main(void)
   char buf[256] = {0};
   char time_string[32] = {0};
   uint8_t device_id[5] = {0};
-  HAL_StatusTypeDef status;
 
-  TFT_fill(framebuffer, 0xFF7F7F7F);
 
-  while(GT911_Read_ID(&gt911, device_id, 4)!=HAL_OK){
+  while(GT911_Read_ID(device_id, 4)!=HAL_OK){
 	  char i2c_error_buf[256] = {0};
 	  sprintf(i2c_error_buf, "Error reading ID: code %lX, state: %lX, mode: %lX", (uint32_t)HAL_I2C_GetError(&hi2c1),  (uint32_t)HAL_I2C_GetState(&hi2c1),  (uint32_t)HAL_I2C_GetMode(&hi2c1));
 	  TFT_String(framebuffer, 20,10, i2c_error_buf, 0xFFFF0000, 0x0);
@@ -149,26 +149,45 @@ int main(void)
   TFT_String(framebuffer, 20,30, buf, 0xFFFFFFFF, 0x0);
   uint32_t fg = 0;
   uint32_t bg = 0;
+
+  uint64_t last_clean = 0;
+
   while (1)
   {
+	  if(HAL_GetTick() > last_clean+10000){
+			TFT_fill(framebuffer, 0xFFFFFFFF);
+			last_clean = HAL_GetTick();
+	  }
 
 	  sprintf(time_string, "Time: %10lu", HAL_GetTick());
 	  TFT_String(framebuffer, 20, 380, time_string, 0xFFFFFFFF, 0x0);
 
-	  status = GT911_Scan(&gt911, 20);
-	  if(status == HAL_TIMEOUT){
-		  sprintf(buf, "%-50s", "Timeout reading coordinates");
-		  fg = 0xFFFFFF00;
-	  }else if(status != HAL_OK){
-		  sprintf(buf, "Error reading display coordinates: %X", status);
-		  fg = 0xFFFF0000;
-		  print_i2c_error(framebuffer);
+	  GT911_CopyShadow();
+	  if(!gt911.Touch){
+		  sprintf(buf, "%-50s", "No touch");
+		  fg = 0xFFFFFFFF;
 	  }else{
-		  sprintf(buf, "%1d %-40s", gt911.TouchCount, "touches detected");
-		  fg = 0xFF00FF00;
+			status = gt911.status;
+			if (status == HAL_TIMEOUT) {
+				sprintf(buf, "%-50s", "Timeout reading coordinates");
+				fg = 0xFFFFFF00;
+			} else if (status != HAL_OK) {
+				sprintf(buf, "Error reading display coordinates: %X", status);
+				fg = 0xFFFF0000;
+			} else {
+				sprintf(buf, "%1d %-40s", gt911.TouchCount, "touches detected");
+				fg = 0xFF00FF00;
+
+				for (uint8_t i=0; i<gt911.TouchCount; i++){
+					GT911_TouchInfo touchInfo = gt911.Touches[i];
+					uint16_t x = touchInfo.point_x;
+					uint16_t y = touchInfo.point_y;
+					TFT_String(framebuffer, x, y, "X", 0xFFFFFFFF, 0x0);
+				}
+			}
 	  }
 	  TFT_String(framebuffer, 20,30,buf, fg, bg);
-	  HAL_Delay(40);
+	  HAL_Delay(16);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -265,20 +284,12 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin==TOUCH_IRQ_Pin){
-		gt911.Touch = 1;
-		uint32_t t = HAL_GetTick();
-		period = t - time;
-		time = t;
+		if(GT911_Scan(10) == HAL_ERROR){
+			GT911_Init();
+		}
 	}
 }
 
-void print_i2c_error(struct tTftFramebuffer framebuffer){
-	  char i2c_error_buf[256] = {0};
-
-	  sprintf(i2c_error_buf, "I2C: code %lX, state: %lX, mode: %lX", (uint32_t)HAL_I2C_GetError(&hi2c1), (uint32_t)HAL_I2C_GetState(&hi2c1), (uint32_t)HAL_I2C_GetMode(&hi2c1));
-	  TFT_String(framebuffer, 20,120, i2c_error_buf, 0xFFFF0000, 0x0);
-
-}
 /* USER CODE END 4 */
 
 /**
