@@ -85,6 +85,8 @@
 /* #define VECT_TAB_SRAM */
 #define VECT_TAB_OFFSET  0x00000000UL /*!< Vector Table base offset field.
                                       This value must be a multiple of 0x200. */
+#undef VECT_TAB_OFFSET
+#define VECT_TAB_OFFSET 0x00040000UL
 /******************************************************************************/
 
 /**

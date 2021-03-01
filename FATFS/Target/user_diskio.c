@@ -36,7 +36,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
-
+#include "sst26_flash.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -82,7 +82,9 @@ DSTATUS USER_initialize (
 )
 {
   /* USER CODE BEGIN INIT */
-    Stat = STA_NOINIT;
+    if(SST26_init()==HAL_OK){
+    	Stat = 0;
+    }
     return Stat;
   /* USER CODE END INIT */
 }
@@ -97,7 +99,6 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-    Stat = STA_NOINIT;
     return Stat;
   /* USER CODE END STATUS */
 }
@@ -118,7 +119,11 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-    return RES_OK;
+	// TODO: replace magic constants with proper defines or named consts. 4096 - ext flash sector size
+	if(SST26_Read(sector * 4096, count * 4096, buff)!=HAL_OK){
+		return RES_ERROR;
+	}
+	return RES_OK;
   /* USER CODE END READ */
 }
 
@@ -140,6 +145,9 @@ DRESULT USER_write (
 {
   /* USER CODE BEGIN WRITE */
   /* USER CODE HERE */
+	if(SST26_SectorWrite(sector, count, (uint8_t*)buff)!=HAL_OK){
+		return RES_ERROR;
+	}
     return RES_OK;
   /* USER CODE END WRITE */
 }
