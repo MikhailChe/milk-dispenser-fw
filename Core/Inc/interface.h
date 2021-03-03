@@ -10,10 +10,9 @@
 
 #include "app_config.h"
 
-struct createInterfaceResp{
 
-};
+void create_main_interface(struct tAppConfig *config);
+void create_settings_interface(struct tAppConfig *config);
 
-struct createInterfaceResp create_main_interface(struct tAppConfig *config);
 
 #endif /* INC_INTERFACE_H_ */

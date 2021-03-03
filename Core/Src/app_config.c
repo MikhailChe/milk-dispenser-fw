@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <string.h>
 
 #include "app_config.h"
 #include "ff.h"
@@ -16,6 +17,7 @@ struct tConfig {
 };
 
 struct tConfig config;
+bool loaded = false;
 
 static uint32_t _crc(union uConfig *u) {
 	uint32_t sum;
@@ -37,9 +39,9 @@ static bool _load_file(FIL *file){
 		return false;
 	}
 
-	uint32_t crc = _crc(&(config.u));
+	uint32_t crc = _crc(&(temp.u));
 
-	bool res =  (config.crc == crc);
+	bool res =  (temp.crc == crc);
 	if (res){
 		config = temp;
 	}
@@ -47,6 +49,9 @@ static bool _load_file(FIL *file){
 }
 
 static bool _load() {
+	if(loaded){
+		return true;
+	}
 	FIL file;
 	if(FR_OK!= f_open(&file, APP_CFG_PATH, FA_READ)){
 		f_close(&file);
@@ -55,6 +60,10 @@ static bool _load() {
 
 	bool res = _load_file(&file);
 	f_close(&file);
+
+	if(res){
+		loaded = true;
+	}
 
 	return res;
 }
@@ -69,6 +78,8 @@ static void _load_defaults() {
 	temp.crc = _crc(&(temp.u));
 
 	config = temp;
+
+	loaded = true;
 }
 
 static bool _save_file(FIL *file){
@@ -112,4 +123,21 @@ struct tAppConfig* AppConfig_get() {
 		Error_Handler();
 	}
 	return _get();
+}
+
+uint32_t AppConfig_delay_for_button(const char * text){
+	struct tAppConfig* config = AppConfig_get();
+
+	for(int i=0; i<APP_BUTTONS_COUNT; i++){
+		if(strcmp(text, config->buttons[i].name) == 0){
+			return config->buttons[i].time;
+		}
+	}
+
+	return 5000;
+}
+
+int AppConfig_compare_password(char * text){
+	char * password = AppConfig_get()->password;
+	return strcmp(text, password);
 }

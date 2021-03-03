@@ -6,9 +6,16 @@
  */
 #include "interface.h"
 
+#include <stdio.h>
+
+#include "app_config.h"
 #include "lvgl.h"
+#include "pump.h"
 
 #define MP 2
+
+lv_obj_t* main_window;
+lv_obj_t* settings_window;
 
 static void lv_spinbox_increment_event_cb(lv_obj_t *btn, lv_event_t e) {
 	lv_obj_t *parent = lv_obj_get_parent(btn);
@@ -59,47 +66,50 @@ static void create_spinbox(lv_obj_t *parent, struct tButtonConfig *config) {
 	lv_obj_set_size(btn, h, h);
 	lv_theme_apply(btn, LV_THEME_SPINBOX_BTN);
 	lv_obj_set_style_local_value_str(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT,
-			LV_SYMBOL_PLUS);
+	LV_SYMBOL_PLUS);
 	lv_obj_set_event_cb(btn, lv_spinbox_increment_event_cb);
 
 	btn = lv_btn_create(container, btn);
 	lv_obj_set_size(btn, h, h);
 	lv_theme_apply(btn, LV_THEME_SPINBOX_BTN);
 	lv_obj_set_style_local_value_str(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT,
-			LV_SYMBOL_MINUS);
+	LV_SYMBOL_MINUS);
 	lv_obj_set_event_cb(btn, lv_spinbox_decrement_event_cb);
-
-//		lv_obj_set_height_margin(btn, MP);
-//		lv_obj_set_width_margin(btn, MP);
-//		lv_obj_set_height_fit(btn, MP);
-//		lv_obj_set_width_fit(btn, MP);
-
 }
 
 static void cancel_pouring_cb(struct _lv_obj_t *obj, lv_event_t event) {
 	if (event == LV_EVENT_VALUE_CHANGED) {
-		//TODO (mikhailche): include code to cancel pouring process
+		pump_off();
 	}
 }
 
-static void create_pouring_popup(lv_obj_t *parent) {
+static void create_pouring_popup(lv_obj_t *parent, const char *button_text) {
 	lv_obj_t *popup = lv_msgbox_create(parent, NULL);
 
-	lv_msgbox_set_text(popup, "Pouring...");
+	int count = sprintf(NULL, "Pouring (%s)", button_text);
+	char msg_text[count + 1];
+	sprintf(msg_text, "Pouring (%s)", button_text);
+
+	lv_msgbox_set_text(popup, msg_text);
 	static const char *btns2[] = { "STOP", "" };
 	lv_msgbox_add_btns(popup, btns2);
 
-	lv_msgbox_start_auto_close(popup, 3000); // TODO: parametrize in some way
+	lv_msgbox_start_auto_close(popup, AppConfig_delay_for_button(button_text));
+	pump_on();
 	lv_obj_set_event_cb(popup, cancel_pouring_cb);
 }
 
+lv_obj_t *btnmtrx = NULL;
+
 static void create_pouring_popup_cb(struct _lv_obj_t *obj, lv_event_t event) {
 	if (event == LV_EVENT_CLICKED) {
-		create_pouring_popup(lv_scr_act());
+		create_pouring_popup(lv_scr_act(),
+				lv_btnmatrix_get_active_btn_text(btnmtrx));
 	}
 }
 
-static void create_settings_pour_column(lv_obj_t *parent, struct tButtonConfig *config) {
+static void create_settings_pour_column(lv_obj_t *parent,
+		struct tButtonConfig *config) {
 	lv_obj_t *container = lv_cont_create(parent, NULL);
 	lv_obj_set_width(container, 250);
 	lv_cont_set_layout(container, LV_LAYOUT_CENTER);
@@ -117,47 +127,106 @@ static void create_settings_pour_column(lv_obj_t *parent, struct tButtonConfig *
 	lv_obj_t *label = lv_label_create(btn, NULL);
 	lv_label_set_text(label, config->name);
 
-	lv_obj_set_event_cb(btn, create_pouring_popup_cb);
+//	lv_obj_set_event_cb(btn, create_pouring_popup_cb);
 }
 
-struct createInterfaceResp create_main_interface(struct tAppConfig *config) {
-	struct createInterfaceResp response;
+char password[10]={0};
+uint8_t cur_pwd_chr = 0;
 
+static void password_popup_cb(struct _lv_obj_t *obj, lv_event_t event) {
+	if (event == LV_EVENT_DELETE) {
+		/* Delete the parent modal background */
+		lv_obj_del_async(lv_obj_get_parent(obj));
+	} else if (event == LV_EVENT_VALUE_CHANGED) {
+		/* A button was clicked */
+		password[cur_pwd_chr] = lv_msgbox_get_active_btn_text(obj)[0];
+		cur_pwd_chr++;
+
+		int password_compare = AppConfig_compare_password(password);
+
+		bool many_letters = cur_pwd_chr >= (sizeof(password)-1);
+
+		if(many_letters || (password_compare == 0)){
+			lv_msgbox_start_auto_close(obj, 0);
+			if(password_compare == 0){
+				create_settings_interface(AppConfig_get());
+			}
+		}
+	}
+}
+
+const char *password_bts[] = { "0", "\n", "1", "2", "3", "\n", "4", "5", "6",
+		"\n", "7", "8", "9", "\n", "OK", "Cancel", "" };
+
+static lv_style_t style_modal;
+
+void create_password_popup(lv_obj_t *parent) {
+	memset(password,0,sizeof(password));
+	cur_pwd_chr = 0;
+
+	lv_style_init(&style_modal);
+	lv_style_set_bg_color(&style_modal, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+
+	lv_obj_t *obj = lv_obj_create(parent, NULL);
+	lv_obj_reset_style_list(obj, LV_OBJ_PART_MAIN);
+	lv_obj_add_style(obj, LV_OBJ_PART_MAIN, &style_modal);
+	lv_obj_set_pos(obj, 0, 0);
+	lv_obj_set_size(obj, LV_HOR_RES, LV_VER_RES);
+
+	lv_obj_t *popup = lv_msgbox_create(obj, NULL);
+
+	lv_msgbox_set_text(popup, "Enter password:");
+	lv_msgbox_add_btns(popup, password_bts);
+
+	lv_obj_set_pos(popup, 0, 0);
+
+	lv_msgbox_start_auto_close(popup, 65535U);
+	lv_obj_set_event_cb(popup, password_popup_cb);
+}
+
+static void settings_btn_cb(struct _lv_obj_t *obj, lv_event_t event) {
+	if (event == LV_EVENT_CLICKED) {
+		create_password_popup(lv_scr_act());
+	}
+}
+
+static const char *main_buttons[8];
+
+void create_main_interface(struct tAppConfig *config) {
 	lv_obj_t *window = lv_win_create(lv_scr_act(), NULL);
 
 	lv_win_set_title(window, "Got milk?");
 
-	lv_win_add_btn(window, LV_SYMBOL_SAVE);
+	lv_obj_t *settings_btn = lv_win_add_btn(window, LV_SYMBOL_SETTINGS);
+	lv_obj_set_event_cb(settings_btn, settings_btn_cb);
 	lv_win_set_scrollbar_mode(window, LV_SCROLLBAR_MODE_OFF);
 
 	lv_win_set_layout(window, LV_LAYOUT_PRETTY_TOP);
 
 	int numbuttons = sizeof(config->buttons) / sizeof(*(config->buttons));
 
-
-	lv_obj_t * btnmtrx = lv_btnmatrix_create(window, NULL);
-
-
-	const char map[numbuttons+1][128];
+	btnmtrx = lv_btnmatrix_create(window, NULL);
 
 	for (int i = 0; i < numbuttons; i++) {
-		strcpy(map[i], config->buttons[i].name);
+		main_buttons[i] = config->buttons[i].name;
 	}
-	memset(&(map[numbuttons]), 0, 127);
+	main_buttons[numbuttons] = "";
 
-	lv_btnmatrix_set_map(btnmtrx, map);
+	lv_btnmatrix_set_map(btnmtrx, main_buttons);
 
-	return response;
+	lv_obj_set_event_cb(btnmtrx, create_pouring_popup_cb);
+
+	main_window = window;
 }
 
-struct createInterfaceResp create_settings_interface(struct tAppConfig *config) {
-	struct createInterfaceResp response;
-
+void create_settings_interface(struct tAppConfig *config) {
 	lv_obj_t *window = lv_win_create(lv_scr_act(), NULL);
 
 	lv_win_set_title(window, "Setting");
 
 	lv_win_add_btn(window, LV_SYMBOL_SAVE);
+	lv_obj_t * close_btn = lv_win_add_btn(window, LV_SYMBOL_CLOSE);
+	lv_obj_set_event_cb(close_btn, lv_win_close_event_cb);
 	lv_win_set_scrollbar_mode(window, LV_SCROLLBAR_MODE_OFF);
 
 	lv_win_set_layout(window, LV_LAYOUT_PRETTY_TOP);
@@ -168,6 +237,6 @@ struct createInterfaceResp create_settings_interface(struct tAppConfig *config) 
 		create_settings_pour_column(window, &(config->buttons[i]));
 	}
 
-	return response;
+	settings_window = window;
 }
 

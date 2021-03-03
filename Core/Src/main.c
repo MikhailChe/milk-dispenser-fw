@@ -229,7 +229,7 @@ int main(void)
 
 	struct tAppConfig *config = AppConfig_get();
 
-	create_settings_interface(config);
+	create_main_interface(config);
 
 	while (1) {
 		uint32_t run_after = lv_task_handler();
