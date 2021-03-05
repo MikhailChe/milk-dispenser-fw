@@ -9,12 +9,18 @@
 #define INC_PUMP_H_
 
 #include "stm32h7xx_hal.h"
+#include <stdbool.h>
 
 void pump_init();
 
 void pump_on();
 
 void pump_off();
+
+bool pump_should_turn_off();
+
+void pump_schedule_turn_off(uint64_t timeout);
+
 
 struct tPumpConfig {
 	GPIO_TypeDef* port;

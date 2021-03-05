@@ -670,61 +670,6 @@ HAL_StatusTypeDef SST26_SectorWrite(uint32_t sectorNumber, uint32_t sectorCount,
 	return HAL_OK;
 }
 
-void SST26_MemoryTest(){
-	HAL_StatusTypeDef status;
-
-	uint64_t TEST_MAX = SST26_MEMORY_SIZE;
-	uint8_t buffer[SST26_PAGE_SIZE];
-
-	uint64_t t1 = HAL_GetTick();
-
-	uint32_t *buffer32 = (uint32_t*)buffer;
-	uint32_t value = 0;
-	uint32_t sector = 0xFFFFFFFF;
-
-	uint64_t i=0;
-
-	log_info("Speed test");
-
-	for(i=0; i<TEST_MAX; i+=SST26_PAGE_SIZE){
-		for(uint64_t j=0; j<SST26_PAGE_SIZE/4; j++){
-			buffer32[j] = value;
-			value++;
-		}
-		if(i/4096 != sector){
-			SST26_EraseSector(i);
-			sector = i/4096;
-		}
-		status = SST26_Write(i, SST26_PAGE_SIZE, buffer);
-		if (status!=HAL_OK){
-			log_error("Write error: %d", status);
-			return;
-		}
-	}
-
-	uint64_t t2 = HAL_GetTick();
-	log_info("Current speed: %llu kB/s", i/(t2 - t1) );
-	log_info("Wrote memory in: %llu, %llu", (t2-t1), i);
-
-	value = 0;
-
-	for(uint64_t i=0; i<TEST_MAX; i+=SST26_PAGE_SIZE){
-		status = SST26_Read(i, SST26_PAGE_SIZE, buffer);
-		if (status!=HAL_OK){
-			log_error("Read error: %d", status);
-			return;
-		}
-		for(uint64_t j=0; j<SST26_PAGE_SIZE/4; j++){
-			if(buffer32[j] != value){
-				log_error("Incorrect value in memory at %llu: expected %llu, actual: %llu", i+j, value, buffer32[j]);
-				return;
-			}
-			value++;
-		}
-	}
-	log_info("Read correct");
-}
-
 static bool initialized = 0;
 
 HAL_StatusTypeDef SST26_init() {

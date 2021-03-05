@@ -19,15 +19,15 @@ struct tConfig {
 struct tConfig config;
 bool loaded = false;
 
-static uint32_t _crc(union uConfig *u) {
-	uint32_t sum;
+static uint32_t get_crc(union uConfig *u) {
+	uint32_t sum = 0;
 	for (int i = 0; i < sizeof(u->data); i++) {
 		sum += u->data[i];
 	}
 	return ~sum;
 }
 
-static bool _load_file(FIL *file){
+static bool load_file(FIL *file){
 	struct tConfig temp;
 	int configSz = sizeof(struct tConfig);
 	UINT br;
@@ -39,7 +39,7 @@ static bool _load_file(FIL *file){
 		return false;
 	}
 
-	uint32_t crc = _crc(&(temp.u));
+	uint32_t crc = get_crc(&(temp.u));
 
 	bool res =  (temp.crc == crc);
 	if (res){
@@ -48,7 +48,7 @@ static bool _load_file(FIL *file){
 	return res;
 }
 
-static bool _load() {
+static bool load() {
 	if(loaded){
 		return true;
 	}
@@ -58,7 +58,7 @@ static bool _load() {
 		return false;
 	}
 
-	bool res = _load_file(&file);
+	bool res = load_file(&file);
 	f_close(&file);
 
 	if(res){
@@ -70,20 +70,22 @@ static bool _load() {
 
 
 
-static void _load_defaults() {
+static void load_defaults() {
 
 	struct tConfig temp = { .u = { .config = { .password = "12345678",
 			.buttons = { { .name = "25", .time = 250, }, { .name = "50", .time =
 					500, }, { .name = "200", .time = 2000, } } } } };
-	temp.crc = _crc(&(temp.u));
+	temp.crc = get_crc(&(temp.u));
 
 	config = temp;
 
 	loaded = true;
 }
 
-static bool _save_file(FIL *file){
+static bool save_file(FIL *file){
 	struct tConfig temp = config;
+	temp.crc = get_crc(&(temp.u));
+
 	int configSz = sizeof(struct tConfig);
 	UINT bw;
 	if(FR_OK!=f_write(file, &temp, configSz, &bw)){
@@ -97,32 +99,36 @@ static bool _save_file(FIL *file){
 	return true;
 }
 
-static bool _save() {
+static bool save() {
 	FIL file;
 	if(FR_OK!=f_open(&file, APP_CFG_PATH, FA_WRITE | FA_CREATE_ALWAYS)){
 		f_close(&file);
 		return false;
 	}
 
-	bool res = _save_file(&file);
+	bool res = save_file(&file);
 	f_close(&file);
 	return res;
 }
 
-static struct tAppConfig* _get() {
+static struct tAppConfig* get() {
 	return &(config.u.config);
 }
 
 struct tAppConfig* AppConfig_get() {
-	if (_load()) {
-		return _get();
+	if (load()) {
+		return get();
 	}
 
-	_load_defaults();
-	if(!_save()){
+	load_defaults();
+	if(!save()){
 		Error_Handler();
 	}
-	return _get();
+	return get();
+}
+
+bool AppConfig_save(){
+	return save();
 }
 
 uint32_t AppConfig_delay_for_button(const char * text){

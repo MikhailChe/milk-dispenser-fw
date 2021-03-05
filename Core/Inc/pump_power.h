@@ -11,7 +11,7 @@
 #include "tim.h"
 
 void pump_power_init();
-void pump_pwoer_deinit();
+void pump_power_deinit();
 
 struct tPumpPowerConfig{
 	TIM_HandleTypeDef* timer;
