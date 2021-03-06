@@ -1,8 +1,8 @@
 #include "pump.h"
 
-static uint64_t turnoffat = 0;
+static __IO uint64_t turnoffat = 0;
 
-static uint8_t pump_state = 0;
+static __IO uint8_t pump_state = 0;
 
 void pump_init(){
 	pump_off();
