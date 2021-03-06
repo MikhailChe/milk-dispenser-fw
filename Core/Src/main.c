@@ -139,6 +139,8 @@ int main(void)
 	pump_config.pin = PUMP_EN_Pin;
 	pump_init();
 
+	pump_power_config.timer = &htim1;
+	pump_power_config.channel = TIM_CHANNEL_1;
 	pump_power_init();
 
 	struct tTftFramebuffer framebuffer = TFT_init_framebuffer(&hltdc);
