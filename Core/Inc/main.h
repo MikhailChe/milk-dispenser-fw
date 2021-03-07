@@ -67,6 +67,14 @@ void Error_Handler(void);
 #define TOUCH_IRQ_EXTI_IRQn EXTI15_10_IRQn
 #define DISP_EN_Pin GPIO_PIN_15
 #define DISP_EN_GPIO_Port GPIOC
+#define HW_BTN3_Pin GPIO_PIN_12
+#define HW_BTN3_GPIO_Port GPIOB
+#define HW_BTN2_Pin GPIO_PIN_13
+#define HW_BTN2_GPIO_Port GPIOB
+#define HW_BTN1_Pin GPIO_PIN_8
+#define HW_BTN1_GPIO_Port GPIOD
+#define HW_BTN0_Pin GPIO_PIN_9
+#define HW_BTN0_GPIO_Port GPIOD
 #define CP_PWM_Pin GPIO_PIN_8
 #define CP_PWM_GPIO_Port GPIOA
 #define DISP_PWM_Pin GPIO_PIN_4

@@ -1,5 +1,6 @@
 #include "interface.h"
 #include "lvgl.h"
+#include "hw_buttons.h"
 
 static lv_obj_t *window;
 
@@ -18,12 +19,22 @@ static void links_cb(lv_obj_t *obj, lv_event_t e) {
 	}
 }
 
+static void win_close_event_cb(lv_obj_t * btn, lv_event_t event)
+{
+	lv_win_close_event_cb(btn, event);
+    if(event == LV_EVENT_RELEASED) {
+        lv_indev_enable(indev_hw_buttons, true);
+    }
+}
+
+
 lv_obj_t* create_settings_menu(lv_obj_t *parent, struct tAppConfig *config) {
+	lv_indev_enable(indev_hw_buttons, false);
 	window = lv_win_create(parent, NULL);
 	lv_win_set_layout(window, LV_LAYOUT_COLUMN_LEFT);
 	{
 		lv_obj_t *close_btn = lv_win_add_btn(window, LV_SYMBOL_CLOSE);
-		lv_obj_set_event_cb(close_btn, lv_win_close_event_cb);
+		lv_obj_set_event_cb(close_btn, win_close_event_cb);
 
 		for (int i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
 			lv_obj_t *link = lv_btn_create(window, NULL);
