@@ -57,7 +57,7 @@ static void create_pouring_popup(lv_obj_t *parent,
 
 	lv_obj_t *popup = lv_msgbox_create(black_pie, NULL);
 
-	int count = sprintf(NULL, "Pouring %ld ml", buttonConfig->volume_ml);
+	int count = snprintf(NULL, 0, "Pouring %ld ml", buttonConfig->volume_ml);
 	char msg_text[count + 1];
 	sprintf(msg_text, "Pouring %ld ml", buttonConfig->volume_ml);
 
@@ -109,7 +109,7 @@ static void password_popup_cb(struct _lv_obj_t *obj, lv_event_t event) {
 		if (many_letters || (password_compare == 0)) {
 			lv_msgbox_start_auto_close(obj, 0);
 			if (password_compare == 0) {
-				create_settings_interface(AppConfig_get());
+				create_settings_menu(lv_scr_act(), AppConfig_get());
 			}
 		}
 	}
@@ -142,7 +142,11 @@ void create_password_popup(lv_obj_t *parent) {
 
 static void settings_btn_cb(struct _lv_obj_t *obj, lv_event_t event) {
 	if (event == LV_EVENT_CLICKED) {
-		create_password_popup(lv_scr_act());
+		if (AppConfig_compare_password("") == 0) {
+			create_settings_menu(lv_scr_act(), AppConfig_get());
+		} else {
+			create_password_popup(lv_scr_act());
+		}
 	}
 
 }
@@ -163,12 +167,13 @@ void create_main_interface(struct tAppConfig *config) {
 		for (int i = 0; i < APP_BUTTONS_COUNT; i++) {
 
 			lv_obj_t *btn = lv_btn_create(button_holder, NULL);
+			lv_obj_set_height(btn, 200);
 			lv_obj_set_user_data(btn, &(config->buttons[i]));
+			lv_obj_set_event_cb(btn, create_pouring_popup_cb);
 
 			lv_obj_t *label = lv_label_create(btn, NULL);
 			lv_label_set_text_fmt(label, "%d ml", config->buttons[i].volume_ml);
 
-			lv_obj_set_event_cb(btn, create_pouring_popup_cb);
 			main_button_labels[i] = label;
 		}
 
