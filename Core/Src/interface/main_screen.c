@@ -151,6 +151,15 @@ static void settings_btn_cb(struct _lv_obj_t *obj, lv_event_t event) {
 
 }
 
+static void resetCurrVal_btn_cb(struct _lv_obj_t *obj, lv_event_t event){
+	if (event == LV_EVENT_CLICKED) {
+		volume_total = 0;
+		lv_label_set_text_fmt(volume_label, volume_label_fmt, volume_total);
+	}
+}
+
+
+
 void create_main_interface(struct tAppConfig *config) {
 	lv_obj_t *window = lv_win_create(lv_scr_act(), NULL);
 	lv_win_set_title(window, "Got milk?");
@@ -161,6 +170,9 @@ void create_main_interface(struct tAppConfig *config) {
 	{
 		lv_obj_t *settings_btn = lv_win_add_btn(window, LV_SYMBOL_SETTINGS);
 		lv_obj_set_event_cb(settings_btn, settings_btn_cb);
+
+		lv_obj_t *resetCurrVal_btn = lv_win_add_btn(window, LV_SYMBOL_REFRESH);
+		lv_obj_set_event_cb(resetCurrVal_btn, resetCurrVal_btn_cb);
 
 		lv_obj_t *button_holder = lv_cont_create(window, NULL);
 

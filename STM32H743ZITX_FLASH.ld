@@ -32,7 +32,7 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = ORIGIN(RAM_D1) + LENGTH(RAM_D1);	/* end of "RAM_D1" Ram type memory */
+_estack = ORIGIN(RAM_D1) + LENGTH(RAM_D1);	/* end of "RAM_D3" Ram type memory */
 
 _Min_Heap_Size = 0x2000 ;	/* required amount of heap  */
 _Min_Stack_Size = 0x4000 ;	/* required amount of stack */
@@ -46,7 +46,6 @@ MEMORY
   RAM_D2    (xrw)    : ORIGIN = 0x30000000,   LENGTH = 288K
   RAM_D3    (xrw)    : ORIGIN = 0x38000000,   LENGTH = 64K
   FLASH    (rx)    : ORIGIN = 0x8040000,   LENGTH = 2048K-256K
-  EXTERNAL_RAM	(xrw)	: ORIGIN = 0x60000000,	LENGTH = 16M
 }
 
 /* Sections */
@@ -74,14 +73,8 @@ SECTIONS
     *(.dtcm_data) /* Fast-executing code */
     *(.dtcm_data*) /* Fast-executing code */
     . = ALIGN(4);
-  } >DTCMRAM
-    .extram_data :
-  {
-    . = ALIGN(4);
-    *(.extram_data) /* Fast-executing code */
-    *(.extram_data*) /* Fast-executing code */
-    . = ALIGN(4);
-  } >EXTERNAL_RAM
+  } >DTCMRAM AT> FLASH
+  
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :

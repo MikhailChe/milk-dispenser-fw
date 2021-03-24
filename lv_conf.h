@@ -83,10 +83,11 @@ typedef int16_t lv_coord_t;
 #define LV_MEM_CUSTOM      0
 #if LV_MEM_CUSTOM == 0
 /* Size of the memory used by `lv_mem_alloc` in bytes (>= 2kB)*/
-#  define LV_MEM_SIZE    (128U * 1024U)
+#  define LV_MEM_SIZE    (100U * 1024U)
 
 /* Compiler prefix for a big array declaration */
 #  define LV_MEM_ATTR		__attribute__((section(".dtcm_data")))
+//#  define LV_MEM_ATTR
 
 /* Set an address for the memory pool instead of allocating it as an array.
  * Can be in external SRAM too. */
@@ -191,7 +192,7 @@ typedef void * lv_group_user_data_t;
 #endif  /*LV_USE_GROUP*/
 
 /* 1: Enable GPU interface*/
-#define LV_USE_GPU              1   /*Only enables `gpu_fill_cb` and `gpu_blend_cb` in the disp. drv- */
+#define LV_USE_GPU              0   /*Only enables `gpu_fill_cb` and `gpu_blend_cb` in the disp. drv- */
 #define LV_USE_GPU_STM32_DMA2D  0
 /*If enabling LV_USE_GPU_STM32_DMA2D, LV_GPU_DMA2D_CMSIS_INCLUDE must be defined to include path of CMSIS header of target processor
 e.g. "stm32f769xx.h" or "stm32f429xx.h" */
@@ -280,7 +281,8 @@ typedef void * lv_img_decoder_user_data_t;
 
 /* Prefix performance critical functions to place them into a faster memory (e.g RAM)
  * Uses 15-20 kB extra memory */
-#define LV_ATTRIBUTE_FAST_MEM __attribute__ ((section(".itcm_text")))
+//#define LV_ATTRIBUTE_FAST_MEM __attribute__ ((section(".itcm_text")))
+#define LV_ATTRIBUTE_FAST_MEM
 
 /* Export integer constant to binding.
  * This macro is used with constants in the form of LV_<CONST> that
@@ -385,9 +387,9 @@ typedef void * lv_indev_drv_user_data_t;            /*Type of user data in the i
 #define LV_FONT_MONTSERRAT_10    0
 #define LV_FONT_MONTSERRAT_12    0
 #define LV_FONT_MONTSERRAT_14    0
-#define LV_FONT_MONTSERRAT_16    1
+#define LV_FONT_MONTSERRAT_16    0
 #define LV_FONT_MONTSERRAT_18    0
-#define LV_FONT_MONTSERRAT_20    0
+#define LV_FONT_MONTSERRAT_20    1
 #define LV_FONT_MONTSERRAT_22    0
 #define LV_FONT_MONTSERRAT_24    0
 #define LV_FONT_MONTSERRAT_26    0
@@ -477,13 +479,13 @@ typedef void * lv_font_user_data_t;
 
 #define LV_THEME_DEFAULT_INCLUDE            <stdint.h>      /*Include a header for the init. function*/
 #define LV_THEME_DEFAULT_INIT               lv_theme_material_init
-#define LV_THEME_DEFAULT_COLOR_PRIMARY      lv_color_hex(0x01a2b1)
-#define LV_THEME_DEFAULT_COLOR_SECONDARY    lv_color_hex(0x44d1b6)
+#define LV_THEME_DEFAULT_COLOR_PRIMARY      lv_color_hex(0xF49097)
+#define LV_THEME_DEFAULT_COLOR_SECONDARY    lv_color_hex(0xF5E960)
 #define LV_THEME_DEFAULT_FLAG               LV_THEME_MATERIAL_FLAG_LIGHT
-#define LV_THEME_DEFAULT_FONT_SMALL         &lv_font_montserrat_16
-#define LV_THEME_DEFAULT_FONT_NORMAL        &lv_font_montserrat_16
-#define LV_THEME_DEFAULT_FONT_SUBTITLE      &lv_font_montserrat_16
-#define LV_THEME_DEFAULT_FONT_TITLE         &lv_font_montserrat_16
+#define LV_THEME_DEFAULT_FONT_SMALL         &lv_font_montserrat_20
+#define LV_THEME_DEFAULT_FONT_NORMAL        &lv_font_montserrat_20
+#define LV_THEME_DEFAULT_FONT_SUBTITLE      &lv_font_montserrat_20
+#define LV_THEME_DEFAULT_FONT_TITLE         &lv_font_montserrat_20
 
 /*=================
  *  Text settings
