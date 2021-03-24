@@ -83,10 +83,10 @@ typedef int16_t lv_coord_t;
 #define LV_MEM_CUSTOM      0
 #if LV_MEM_CUSTOM == 0
 /* Size of the memory used by `lv_mem_alloc` in bytes (>= 2kB)*/
-#  define LV_MEM_SIZE    (256U * 1024U)
+#  define LV_MEM_SIZE    (128U * 1024U)
 
 /* Compiler prefix for a big array declaration */
-#  define LV_MEM_ATTR
+#  define LV_MEM_ATTR		__attribute__((section(".dtcm_data")))
 
 /* Set an address for the memory pool instead of allocating it as an array.
  * Can be in external SRAM too. */
