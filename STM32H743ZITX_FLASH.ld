@@ -75,6 +75,13 @@ SECTIONS
     *(.dtcm_data*) /* Fast-executing code */
     . = ALIGN(4);
   } >DTCMRAM
+    .extram_data :
+  {
+    . = ALIGN(4);
+    *(.extram_data) /* Fast-executing code */
+    *(.extram_data*) /* Fast-executing code */
+    . = ALIGN(4);
+  } >EXTERNAL_RAM
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :
