@@ -39,9 +39,9 @@
 
 /*A demo application with Keyboard, Text area, List and Chart
  * placed on Tab view */
-#define LV_USE_DEMO        1
+#define LV_USE_DEMO        0
 #if LV_USE_DEMO
-#define LV_DEMO_WALLPAPER  1    /*Create a wallpaper too*/
+#define LV_DEMO_WALLPAPER  0    /*Create a wallpaper too*/
 #define LV_DEMO_SLIDE_SHOW 0    /*Automatically switch between tabs*/
 #endif
 
@@ -54,9 +54,9 @@
 /*Touch pad calibration with 4 points*/
 #define LV_USE_TPCAL       0
 
-#define LV_USE_DEMO_WIDGETS        1
+#define LV_USE_DEMO_WIDGETS        0
 
-#define LV_USE_DEMO_KEYPAD_AND_ENCODER 1
+#define LV_USE_DEMO_KEYPAD_AND_ENCODER 0
 
 
 #endif /*LV_EX_CONF_H*/
