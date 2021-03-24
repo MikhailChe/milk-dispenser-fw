@@ -58,6 +58,14 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
+  
+  .itcm_text :
+  {
+    . = ALIGN(4);
+    *(.itcm_text) /* Fast-executing code */
+    *(.itcm_text*) /* Fast-executing code */
+    . = ALIGN(4);
+  } >ITCMRAM AT> FLASH
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :

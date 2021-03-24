@@ -195,7 +195,7 @@ typedef void * lv_group_user_data_t;
 #define LV_USE_GPU_STM32_DMA2D  0
 /*If enabling LV_USE_GPU_STM32_DMA2D, LV_GPU_DMA2D_CMSIS_INCLUDE must be defined to include path of CMSIS header of target processor
 e.g. "stm32f769xx.h" or "stm32f429xx.h" */
-#define LV_GPU_DMA2D_CMSIS_INCLUDE "stm32h743xx.h"
+#define LV_GPU_DMA2D_CMSIS_INCLUDE "stm32h7xx.h"
 
 /*1: Use PXP for CPU off-load on NXP RTxxx platforms */
 #define LV_USE_GPU_NXP_PXP      0
@@ -280,7 +280,7 @@ typedef void * lv_img_decoder_user_data_t;
 
 /* Prefix performance critical functions to place them into a faster memory (e.g RAM)
  * Uses 15-20 kB extra memory */
-#define LV_ATTRIBUTE_FAST_MEM
+#define LV_ATTRIBUTE_FAST_MEM __attribute__ ((section(".itcm_text")))
 
 /* Export integer constant to binding.
  * This macro is used with constants in the form of LV_<CONST> that
