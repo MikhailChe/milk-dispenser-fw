@@ -86,7 +86,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	SCB->VTOR = 0x08040000;
-	HAL_QSPI_DeInit(&hqspi);
+//	HAL_QSPI_DeInit(&hqspi);
 	__enable_irq();
 
 	HAL_StatusTypeDef status;
