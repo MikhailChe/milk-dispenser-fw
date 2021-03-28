@@ -175,11 +175,12 @@ void create_main_interface(struct tAppConfig *config) {
 		lv_obj_set_event_cb(resetCurrVal_btn, resetCurrVal_btn_cb);
 
 		lv_obj_t *button_holder = lv_cont_create(window, NULL);
+		lv_obj_set_click(button_holder, false);
 
 		for (int i = 0; i < APP_BUTTONS_COUNT; i++) {
 
 			lv_obj_t *btn = lv_btn_create(button_holder, NULL);
-			lv_obj_set_height(btn, 200);
+			lv_obj_set_height(btn, lv_obj_get_width(btn));
 			lv_obj_set_user_data(btn, &(config->buttons[i]));
 			lv_obj_set_event_cb(btn, create_pouring_popup_cb);
 

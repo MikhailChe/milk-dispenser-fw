@@ -50,7 +50,7 @@ static void create_spinbox(lv_obj_t *parent, struct tButtonConfig *config) {
 	lv_obj_set_width_fit(container, lv_obj_get_width(parent)/3);
 	lv_obj_set_height_fit(container, lv_obj_get_height_fit(lv_win_get_content(parent)));
 	lv_cont_set_layout(container, LV_LAYOUT_CENTER);
-//	lv_cont_set_fit(container, LV_FIT_TIGHT);
+	lv_obj_set_click(container, false);
 
 	lv_obj_t *btn = lv_btn_create(container, NULL);
 
@@ -62,16 +62,16 @@ static void create_spinbox(lv_obj_t *parent, struct tButtonConfig *config) {
 	lv_spinbox_set_step(spinbox, 1);
 	lv_spinbox_set_value(spinbox, config->volume_ml);
 	lv_cont_set_fit2(spinbox, LV_FIT_PARENT, LV_FIT_TIGHT);
-//	lv_obj_set_height_fit(spinbox, lv_obj_get_height(container)/3);
+
 	lv_textarea_set_cursor_hidden(spinbox, true);
 	lv_textarea_set_text_align(spinbox,LV_LABEL_ALIGN_CENTER);
 
 	lv_obj_align(spinbox, NULL, LV_ALIGN_CENTER, 0, 0);
 
-//	lv_coord_t h = lv_obj_get_height(spinbox);
+
 	lv_cont_set_fit2(btn, LV_FIT_PARENT,LV_FIT_TIGHT);
 	lv_obj_set_height_fit(btn, lv_obj_get_height(container)/3);
-//	lv_obj_set_size(btn, h, h);
+
 	lv_theme_apply(btn, LV_THEME_SPINBOX_BTN);
 	lv_obj_set_style_local_value_str(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT,
 	LV_SYMBOL_PLUS);
@@ -80,7 +80,7 @@ static void create_spinbox(lv_obj_t *parent, struct tButtonConfig *config) {
 	btn = lv_btn_create(container, btn);
 	lv_cont_set_fit2(btn, LV_FIT_PARENT,LV_FIT_TIGHT);
 	lv_obj_set_height_fit(btn, lv_obj_get_height(container)/3);
-//	lv_obj_set_size(btn, h, h);
+
 	lv_theme_apply(btn, LV_THEME_SPINBOX_BTN);
 	lv_obj_set_style_local_value_str(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT,
 	LV_SYMBOL_MINUS);

@@ -40,12 +40,12 @@ _Min_Stack_Size = 0x4000 ;	/* required amount of stack */
 /* Memories definition */
 MEMORY
 {
-  DTCMRAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
-  ITCMRAM    (xrw)    : ORIGIN = 0x00000000,   LENGTH = 64K
-  RAM_D1    (xrw)    : ORIGIN = 0x24000000,   LENGTH = 512K
-  RAM_D2    (xrw)    : ORIGIN = 0x30000000,   LENGTH = 288K
-  RAM_D3    (xrw)    : ORIGIN = 0x38000000,   LENGTH = 64K
-  FLASH    (rx)    : ORIGIN = 0x8040000,   LENGTH = 2048K-256K
+  DTCMRAM	(xrw)	: ORIGIN = 0x20000000,	LENGTH = 128K
+  ITCMRAM	(xrw)	: ORIGIN = 0x00000000,	LENGTH = 64K
+  RAM_D1	(xrw)	: ORIGIN = 0x24000000,	LENGTH = 512K
+  RAM_D2	(xrw)	: ORIGIN = 0x30000000,	LENGTH = 288K
+  RAM_D3	(xrw)	: ORIGIN = 0x38000000,	LENGTH = 64K
+  FLASH		(rx)	: ORIGIN = 0x8040000,	LENGTH = 2048K-256K
 }
 
 /* Sections */
@@ -58,15 +58,7 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
-  
-  .itcm_text :
-  {
-    . = ALIGN(4);
-    *(.itcm_text) /* Fast-executing code */
-    *(.itcm_text*) /* Fast-executing code */
-    . = ALIGN(4);
-  } >ITCMRAM AT> FLASH
-  
+
   .dtcm_data :
   {
     . = ALIGN(4);

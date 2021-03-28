@@ -281,7 +281,6 @@ typedef void * lv_img_decoder_user_data_t;
 
 /* Prefix performance critical functions to place them into a faster memory (e.g RAM)
  * Uses 15-20 kB extra memory */
-//#define LV_ATTRIBUTE_FAST_MEM __attribute__ ((section(".itcm_text")))
 #define LV_ATTRIBUTE_FAST_MEM
 
 /* Export integer constant to binding.
@@ -455,11 +454,11 @@ typedef void * lv_font_user_data_t;
 
 /* No theme, you can apply your styles as you need
  * No flags. Set LV_THEME_DEFAULT_FLAG 0 */
-#define LV_USE_THEME_EMPTY       1
+#define LV_USE_THEME_EMPTY       0
 
 /*Simple to the create your theme based on it
  * No flags. Set LV_THEME_DEFAULT_FLAG 0 */
-#define LV_USE_THEME_TEMPLATE    1
+#define LV_USE_THEME_TEMPLATE    0
 
 /* A fast and impressive theme.
  * Flags:
@@ -475,7 +474,7 @@ typedef void * lv_font_user_data_t;
  * texts and borders will be black and the background will be
  * white. Else the colors are inverted.
  * No flags. Set LV_THEME_DEFAULT_FLAG 0 */
-#define LV_USE_THEME_MONO        1
+#define LV_USE_THEME_MONO        0
 
 #define LV_THEME_DEFAULT_INCLUDE            <stdint.h>      /*Include a header for the init. function*/
 #define LV_THEME_DEFAULT_INIT               lv_theme_material_init

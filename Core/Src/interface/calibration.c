@@ -68,6 +68,7 @@ lv_obj_t* create_calibration_window(lv_obj_t *parent, struct tAppConfig *config)
 		lv_obj_set_event_cb(close_btn, lv_win_close_event_cb);
 
 		lv_obj_t *time_changer_cont = lv_cont_create(calibration_window, NULL);
+		lv_obj_set_click(time_changer_cont, false);
 		{
 			lv_obj_set_width_fit(time_changer_cont,
 					lv_obj_get_width(calibration_window));
@@ -75,6 +76,7 @@ lv_obj_t* create_calibration_window(lv_obj_t *parent, struct tAppConfig *config)
 
 			lv_obj_t *time_changer_slider_cont = lv_cont_create(
 					time_changer_cont, NULL);
+			lv_obj_set_click(time_changer_slider_cont, false);
 			{
 				lv_obj_set_height_fit(time_changer_slider_cont,
 						lv_obj_get_height(time_changer_cont));
@@ -122,6 +124,7 @@ lv_obj_t* create_calibration_window(lv_obj_t *parent, struct tAppConfig *config)
 
 		lv_obj_t *resValChngr_cont = lv_cont_create(calibration_window,
 		NULL);
+		lv_obj_set_click(resValChngr_cont, false);
 		{
 			lv_obj_set_width_fit(resValChngr_cont,
 					lv_obj_get_width(calibration_window));
@@ -130,6 +133,7 @@ lv_obj_t* create_calibration_window(lv_obj_t *parent, struct tAppConfig *config)
 					-lv_win_get_header_height(calibration_window) / 2);
 			lv_obj_t *resValChngrSlider_cont = lv_cont_create(resValChngr_cont,
 			NULL);
+			lv_obj_set_click(resValChngrSlider_cont, false);
 			{
 				lv_obj_set_height_fit(resValChngrSlider_cont,
 						lv_obj_get_height(resValChngr_cont));
