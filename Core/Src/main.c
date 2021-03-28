@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma2d.h"
 #include "fatfs.h"
 #include "i2c.h"
 #include "ltdc.h"
@@ -86,7 +87,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	SCB->VTOR = 0x08040000;
-//	HAL_QSPI_DeInit(&hqspi);
 	__enable_irq();
 
 	HAL_StatusTypeDef status;
@@ -125,6 +125,7 @@ int main(void)
   MX_TIM1_Init();
   MX_QUADSPI_Init();
   MX_FATFS_Init();
+  MX_DMA2D_Init();
   /* USER CODE BEGIN 2 */
 	SST26_config.hqspi = &hqspi;
 	SST26_config.timeout = 100;
