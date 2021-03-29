@@ -35,12 +35,14 @@ lv_obj_t* create_settings_menu(lv_obj_t *parent, struct tAppConfig *config) {
 	{
 		lv_obj_t *close_btn = lv_win_add_btn(window, LV_SYMBOL_CLOSE);
 		lv_obj_set_event_cb(close_btn, win_close_event_cb);
-
-		for (int i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+		uint8_t numOfBttn = sizeof(names) / sizeof(names[0]);
+		for (int i = 0; i < numOfBttn; i++) {
 			lv_obj_t *link = lv_btn_create(window, NULL);
 			lv_obj_set_user_data(link, callbacks[i]);
 			lv_obj_set_event_cb(link, links_cb);
-			lv_btn_set_fit(link, LV_FIT_TIGHT);
+//			lv_btn_set_fit(link, LV_FIT_TIGHT);
+			lv_btn_set_fit2(link, LV_FIT_MAX,LV_FIT_NONE);
+			lv_obj_set_height_fit(link, (lv_obj_get_height(window)-lv_win_get_header_height(window))/numOfBttn);
 			{
 				lv_obj_t *label = lv_label_create(link, NULL);
 				lv_label_set_text(label, names[i]);

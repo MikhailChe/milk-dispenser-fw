@@ -4,7 +4,7 @@ static volatile tColor *FrameBuffer = (tColor*)0x60000000;
 
 struct tTftFramebuffer TFT_init_framebuffer(LTDC_HandleTypeDef *hltdc) {
 	HAL_LTDC_SetAddress(hltdc, (uint32_t) FrameBuffer, 0);
-	return (struct tTftFramebuffer ) { (tColor*) FrameBuffer, 800, 480, &Font12 } ;
+	return (struct tTftFramebuffer ) { (tColor*) FrameBuffer, LV_HOR_RES_MAX, LV_VER_RES_MAX, &Font16 } ;
 }
 
 void TFT_pixel(struct tTftFramebuffer buffer, uint16_t x, uint16_t y, tColor color) {

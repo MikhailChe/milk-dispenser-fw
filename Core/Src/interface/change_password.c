@@ -11,11 +11,11 @@ static const char *accpeted_chars = "0123456789";
 static const char *default_kb_map_num[] = { //
 		"1", "2", "3", LV_SYMBOL_CLOSE, "\n",
 		//
-				"4", "5", "6", LV_SYMBOL_OK, "\n",
-				//
-				"7", "8", "9", LV_SYMBOL_BACKSPACE, "\n",
-				//
-				"0", LV_SYMBOL_LEFT, LV_SYMBOL_RIGHT, "" };
+		"4", "5", "6", LV_SYMBOL_OK, "\n",
+		//
+		"7", "8", "9", LV_SYMBOL_BACKSPACE, "\n",
+		//
+		"0", LV_SYMBOL_LEFT, LV_SYMBOL_RIGHT, "" };
 
 static const lv_btnmatrix_ctrl_t default_kb_ctrl_num_map[] = {
 //
@@ -90,6 +90,10 @@ lv_obj_t* create_change_password_window(lv_obj_t *parent,
 		lv_textarea_set_text(ta, config->password);
 		lv_obj_set_event_cb(ta, ta_event_cb);
 
+	}
+	if(kb == NULL)
+	{
+		kb_create();
 	}
 	return window;
 }
